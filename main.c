@@ -10,15 +10,32 @@ struct Chunk {
         void *usable_size;
 };
 
+int is_first_allocation = 0; // 1 = false | 0 = true
+static struct Chunk *first_allocated_chunk;
+
 void* my_malloc(int bytes)
 {
-        struct Chunk *chunk = sbrk(sizeof(struct Chunk) + bytes);
-        chunk->size = bytes;
-        chunk->free = 'n';
-        chunk->next_chunk = NULL;
-        chunk->prev_chunk = sbrk(0);
+        if (is_first_allocation == 0) {
+                first_allocated_chunk = sbrk(sizeof(struct Chunk) + bytes);
+                first_allocated_chunk->size = bytes;
+                first_allocated_chunk->free = 'n';
+                first_allocated_chunk->next_chunk = first_allocated_chunk;
+                first_allocated_chunk->prev_chunk = first_allocated_chunk;
 
-        return &chunk->usable_size;
+                is_first_allocation = 1;
+
+                return &first_allocated_chunk->usable_size;
+        } else {
+                struct Chunk *chunk = sbrk(sizeof(struct Chunk) + bytes);
+                chunk->size = bytes;
+                chunk->free = 'n';
+
+                first_allocated_chunk->prev_chunk->next_chunk = chunk;
+                chunk->next_chunk = first_allocated_chunk;
+                first_allocated_chunk->prev_chunk = chunk;
+
+                return &chunk->usable_size;
+        }
 }
 
 int main()
