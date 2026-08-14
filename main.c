@@ -13,7 +13,7 @@ struct Chunk {
 int is_first_allocation = 1; // 1 = true | 0 = false
 static struct Chunk *first_allocated_chunk;
 
-void* my_malloc(int bytes)
+void* x_malloc(int bytes)
 {
         if (is_first_allocation == 1) {
                 first_allocated_chunk = sbrk(sizeof(struct Chunk) + bytes);
@@ -39,11 +39,17 @@ void* my_malloc(int bytes)
         }
 }
 
+void x_free(void *data_ptr)
+{
+        char *ptr = data_ptr;
+        char *pptr = ptr - 20;
+        *pptr = 'y';
+}
+
 int main()
 {
-        char *buffer = my_malloc(sizeof(char) * 16);
-        buffer[0] = 'h';
-        printf("%c\n", buffer[0]);
+        char *buffer = x_malloc(sizeof(char) * 16);
+        x_free(buffer);
 
         return 0;
 }
