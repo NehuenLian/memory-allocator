@@ -30,6 +30,7 @@ void* my_malloc(int bytes)
                 chunk->size = bytes;
                 chunk->free = 'n';
 
+                chunk->prev_chunk = first_allocated_chunk->prev_chunk;
                 first_allocated_chunk->prev_chunk->next_chunk = chunk;
                 chunk->next_chunk = first_allocated_chunk;
                 first_allocated_chunk->prev_chunk = chunk;
