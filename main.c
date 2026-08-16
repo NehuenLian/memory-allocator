@@ -61,6 +61,9 @@ void* x_malloc(int bytes)
 
 void x_free(void *data_ptr)
 {
+        if (data_ptr == NULL) {
+                return;
+        }
         char *ptr = data_ptr;
         char *pptr = ptr - 20;
         *pptr = 'y';
