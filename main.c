@@ -13,8 +13,28 @@ struct Chunk {
 int is_first_allocation = 1; // 1 = true | 0 = false
 static struct Chunk *first_allocated_chunk;
 
+int round_up_bytes(int bytes)
+{
+        if (bytes < 16) {
+                return 16;
+        }
+
+        int r = 16;
+        int result;
+        for (int i = 1; result < bytes; i++) {
+                result = r*i;
+        }
+        int diff = result - bytes;
+
+        return bytes + diff;
+}
+
 void* x_malloc(int bytes)
 {
+        if (bytes % 16 != 0) {
+                bytes = round_up_bytes(bytes);
+        }
+
         if (is_first_allocation == 1) {
                 first_allocated_chunk = sbrk(sizeof(struct Chunk) + bytes);
                 first_allocated_chunk->size = bytes;
