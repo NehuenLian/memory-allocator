@@ -69,6 +69,19 @@ void x_free(void *data_ptr)
         *pptr = 'y';
 }
 
+void* search_free_chunk(int bytes)
+{
+        struct Chunk *chunk = first_allocated_chunk;
+        do {
+                if (chunk->size >= bytes) {
+                        return &chunk->usable_size;
+                }
+                chunk = chunk->next_chunk;
+        } while (chunk != first_allocated_chunk);
+
+        return NULL;
+}
+
 int main()
 {
         char *buffer = x_malloc(sizeof(char) * 16);
