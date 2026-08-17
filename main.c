@@ -65,7 +65,7 @@ void* x_malloc(int bytes)
 void x_free(void *data_ptr)
 {
 /*
-        Searchs for an already free chunk with the requested size
+        Searches for an already free chunk with the requested size
         or larger and returns a pointer to usable_size sector of
         the chunk found or NULL if doesn't find any.
         Returning NULL makes easier to verify in the caller if a
