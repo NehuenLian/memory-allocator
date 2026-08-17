@@ -16,23 +16,23 @@ struct Chunk {
 int is_first_allocation = TRUE;
 static struct Chunk *first_allocated_chunk;
 
-int round_up_bytes(int bytes_requested)
+size_t round_up_bytes(size_t bytes_requested)
 {
         if (bytes_requested < 16) {
                 return 16;
         }
 
         int r = 16;
-        int result;
+        size_t result;
         for (int i = 1; result < bytes_requested; i++) {
                 result = r*i;
         }
-        int diff = result - bytes_requested;
+        size_t diff = result - bytes_requested;
 
         return bytes_requested + diff;
 }
 
-void* x_malloc(int bytes_requested)
+void* x_malloc(size_t bytes_requested)
 {
         if (bytes_requested % 16 != 0) {
                 bytes_requested = round_up_bytes(bytes_requested);
@@ -79,7 +79,7 @@ void x_free(void *data_ptr)
         *pptr = TRUE;
 }
 
-void* search_free_chunk(int bytes_requested)
+void* search_free_chunk(size_t bytes_requested)
 {
         struct Chunk *chunk = first_allocated_chunk;
         do {
