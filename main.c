@@ -101,7 +101,7 @@ void x_free(void *data_ptr)
 void* search_free_chunk(size_t bytes_requested)
 {
 /*
-        Using a First Fit policy, searches for an already free
+        Using a First-Fit policy, searches for an already free
         chunk with the requested size or larger and returns a
         pointer to usable_size sector of the chunk found or NULL
         if doesn't find any.
