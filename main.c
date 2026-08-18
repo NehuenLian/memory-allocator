@@ -69,13 +69,6 @@ void* x_malloc(size_t bytes_requested)
 
 void x_free(void *data_ptr)
 {
-/*
-        Searches for an already free chunk with the requested size
-        or larger and returns a pointer to usable_size sector of
-        the chunk found or NULL if doesn't find any.
-        Returning NULL makes easier to verify in the caller if a
-        free chunk has been found or not.
-*/
         if (data_ptr == NULL) {
                 return;
         }
@@ -86,6 +79,13 @@ void x_free(void *data_ptr)
 
 void* search_free_chunk(size_t bytes_requested)
 {
+/*
+        Searches for an already free chunk with the requested size
+        or larger and returns a pointer to usable_size sector of
+        the chunk found or NULL if doesn't find any.
+        Returning NULL makes easier to verify in the caller if a
+        free chunk has been found or not.
+*/
         struct Chunk *chunk = first_allocated_chunk;
         do {
                 if (chunk->size >= bytes_requested) {
