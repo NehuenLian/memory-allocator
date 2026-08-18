@@ -23,6 +23,20 @@ static struct Chunk *first_allocated_chunk;
 
 size_t round_up_bytes(size_t bytes_requested)
 {
+/*
+        Rounds the number of bytes requested to a multiple of 16
+        to match the page alignment.
+        Multiplies the alignment value until it reaches the first
+        number that is greater than the bytes requested.
+        Then, gets the difference between that number and the
+        bytes_requested value.
+        Finally, makes an add between the diff value and the initial
+        bytes_requested number, getting the nearest-round value to it.
+
+        Is not the most efficient or the fastest round, but you
+        probably don't want to assignate memory using a not page-aligned
+        value. Although, a protection for that is needed.
+*/
         if (bytes_requested < BYTES_MINIMUM_REQUIRED) {
                 return BYTES_MINIMUM_REQUIRED;
         }
@@ -69,6 +83,13 @@ void* x_malloc(size_t bytes_requested)
 
 void x_free(void *data_ptr)
 {
+/*
+        Uses the pointer to the usable_size to go back n
+        memory addresses to reach the free attribute of
+        the current chunk and changes it to TRUE.
+        Setting the free attribute to TRUE allows the search
+        algorithm to select it for a new allocation.
+*/
         if (data_ptr == NULL) {
                 return;
         }
@@ -80,9 +101,10 @@ void x_free(void *data_ptr)
 void* search_free_chunk(size_t bytes_requested)
 {
 /*
-        Searches for an already free chunk with the requested size
-        or larger and returns a pointer to usable_size sector of
-        the chunk found or NULL if doesn't find any.
+        Using a First Fit policy, searches for an already free
+        chunk with the requested size or larger and returns a
+        pointer to usable_size sector of the chunk found or NULL
+        if doesn't find any.
         Returning NULL makes easier to verify in the caller if a
         free chunk has been found or not.
 */
