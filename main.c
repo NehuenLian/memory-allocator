@@ -4,6 +4,11 @@
 #define TRUE 1
 #define FALSE 0
 
+#define BYTES_MINIMUM_REQUIRED 16
+#define ALIGNMENT_MULTIPLE 16
+
+#define BACKOFF_3_POINTERS (sizeof(size_t)) * (3)
+
 // 24/32 bytes
 struct Chunk {
         size_t size;
@@ -18,14 +23,14 @@ static struct Chunk *first_allocated_chunk;
 
 size_t round_up_bytes(size_t bytes_requested)
 {
-        if (bytes_requested < 16) {
-                return 16;
+        if (bytes_requested < BYTES_MINIMUM_REQUIRED) {
+                return BYTES_MINIMUM_REQUIRED;
         }
 
-        int r = 16;
+        int alignment = ALIGNMENT_MULTIPLE;
         size_t result;
         for (int i = 1; result < bytes_requested; i++) {
-                result = r*i;
+                result = alignment*i;
         }
         size_t diff = result - bytes_requested;
 
@@ -34,7 +39,7 @@ size_t round_up_bytes(size_t bytes_requested)
 
 void* x_malloc(size_t bytes_requested)
 {
-        if (bytes_requested % 16 != 0) {
+        if (bytes_requested % ALIGNMENT_MULTIPLE != 0) {
                 bytes_requested = round_up_bytes(bytes_requested);
         }
 
@@ -75,7 +80,7 @@ void x_free(void *data_ptr)
                 return;
         }
         char *ptr = data_ptr;
-        char *pptr = ptr - 20;
+        char *pptr = ptr - BACKOFF_3_POINTERS;
         *pptr = TRUE;
 }
 
