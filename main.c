@@ -5,10 +5,7 @@
 #define TRUE 1
 #define FALSE 0
 
-#define BYTES_MINIMUM_REQUIRED 16
-#define ALIGNMENT_MULTIPLE 16
-
-#define BACKOFF_3_POINTERS (sizeof(size_t)) * (3)
+#define PAGESIZE_MULTIPLE 16
 
 // 24/32 bytes
 struct SbrkChunk {
@@ -27,6 +24,9 @@ struct MMAPCHunk {
 
 int is_first_allocation = TRUE;
 static struct SbrkChunk *first_allocated_chunk;
+
+
+#define BYTES_MINIMUM_REQUIRED 16
 
 size_t round_up_bytes(size_t bytes_requested)
 {
@@ -48,7 +48,7 @@ size_t round_up_bytes(size_t bytes_requested)
                 return BYTES_MINIMUM_REQUIRED;
         }
 
-        int alignment = ALIGNMENT_MULTIPLE;
+        int alignment = PAGESIZE_MULTIPLE;
         size_t result;
         for (int i = 1; result < bytes_requested; i++) {
                 result = alignment*i;
@@ -87,7 +87,6 @@ void* alloc_set_break(size_t bytes_requested)
 
 void* alloc_memory_map(size_t bytes_requested)
 {
-
         struct MMAPCHunk *chunk = mmap(NULL, sizeof(struct MMAPCHunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
         chunk->size = bytes_requested;
 
@@ -96,7 +95,7 @@ void* alloc_memory_map(size_t bytes_requested)
 
 void* x_malloc(size_t bytes_requested)
 {
-        if (bytes_requested % ALIGNMENT_MULTIPLE != 0) {
+        if (bytes_requested % PAGESIZE_MULTIPLE != 0) {
                 bytes_requested = round_up_bytes(bytes_requested);
         }
 
@@ -108,6 +107,9 @@ void* x_malloc(size_t bytes_requested)
                 return chunk_usable_size;
         }
 }
+
+
+#define BACKOFF_3_POINTERS (sizeof(size_t)) * (3)
 
 void x_free(void *data_ptr)
 {
