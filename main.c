@@ -81,6 +81,46 @@ void* alloc_set_break(size_t bytes_requested)
         }
 }
 
+void* alloc_memory_map(size_t bytes_requested)
+{
+        if (is_first_mapping == TRUE) {
+                first_mapped_chunk = mmap(NULL, sizeof(struct Chunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+                first_mapped_chunk->size = bytes_requested;
+                first_mapped_chunk->free = FALSE;
+                first_mapped_chunk->next_chunk = first_mapped_chunk;
+                first_mapped_chunk->prev_chunk = first_mapped_chunk;
+
+                is_first_mapping = FALSE;
+                return &first_mapped_chunk->usable_size;
+        } else {
+                struct Chunk *chunk = mmap(NULL, sizeof(struct Chunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+                chunk->size = bytes_requested;
+                chunk->free = FALSE;
+
+                chunk->prev_chunk = first_mapped_chunk->prev_chunk;
+                first_mapped_chunk->prev_chunk->next_chunk = chunk;
+                chunk->next_chunk = first_mapped_chunk;
+                first_mapped_chunk->prev_chunk = chunk;
+
+                return &chunk->usable_size;
+        }
+}
+
+void* x_malloc(size_t bytes_requested)
+{
+        if (bytes_requested % ALIGNMENT_MULTIPLE != 0) {
+                bytes_requested = round_up_bytes(bytes_requested);
+        }
+
+        if (bytes_requested < 1024) {
+                void *chunk_usable_size = alloc_set_break(bytes_requested);
+                return chunk_usable_size;
+        } else {
+                void *chunk_usable_size = alloc_memory_map(bytes_requested);
+                return chunk_usable_size;
+        }
+}
+
 void x_free(void *data_ptr)
 {
 /*
