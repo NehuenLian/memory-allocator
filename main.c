@@ -11,18 +11,22 @@
 #define BACKOFF_3_POINTERS (sizeof(size_t)) * (3)
 
 // 24/32 bytes
-struct Chunk {
+struct SbrkChunk {
         size_t size;
         int free;
-        struct Chunk *next_chunk;
-        struct Chunk *prev_chunk;
+        struct SbrkChunk *next_chunk;
+        struct SbrkChunk *prev_chunk;
+        void *usable_size;
+};
+
+// 8/16 bytes
+struct MMAPCHunk {
+        size_t size;
         void *usable_size;
 };
 
 int is_first_allocation = TRUE;
-int is_first_mapping = TRUE;
-static struct Chunk *first_allocated_chunk;
-static struct Chunk *first_mapped_chunk;
+static struct SbrkChunk *first_allocated_chunk;
 
 size_t round_up_bytes(size_t bytes_requested)
 {
@@ -58,7 +62,7 @@ void* alloc_set_break(size_t bytes_requested)
 {
 
         if (is_first_allocation == TRUE) {
-                first_allocated_chunk = sbrk(sizeof(struct Chunk) + bytes_requested);
+                first_allocated_chunk = sbrk(sizeof(struct SbrkChunk) + bytes_requested);
                 first_allocated_chunk->size = bytes_requested;
                 first_allocated_chunk->free = FALSE;
                 first_allocated_chunk->next_chunk = first_allocated_chunk;
@@ -68,7 +72,7 @@ void* alloc_set_break(size_t bytes_requested)
 
                 return &first_allocated_chunk->usable_size;
         } else {
-                struct Chunk *chunk = sbrk(sizeof(struct Chunk) + bytes_requested);
+                struct SbrkChunk *chunk = sbrk(sizeof(struct SbrkChunk) + bytes_requested);
                 chunk->size = bytes_requested;
                 chunk->free = FALSE;
 
@@ -83,27 +87,11 @@ void* alloc_set_break(size_t bytes_requested)
 
 void* alloc_memory_map(size_t bytes_requested)
 {
-        if (is_first_mapping == TRUE) {
-                first_mapped_chunk = mmap(NULL, sizeof(struct Chunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-                first_mapped_chunk->size = bytes_requested;
-                first_mapped_chunk->free = FALSE;
-                first_mapped_chunk->next_chunk = first_mapped_chunk;
-                first_mapped_chunk->prev_chunk = first_mapped_chunk;
 
-                is_first_mapping = FALSE;
-                return &first_mapped_chunk->usable_size;
-        } else {
-                struct Chunk *chunk = mmap(NULL, sizeof(struct Chunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-                chunk->size = bytes_requested;
-                chunk->free = FALSE;
+        struct MMAPCHunk *chunk = mmap(NULL, sizeof(struct MMAPCHunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+        chunk->size = bytes_requested;
 
-                chunk->prev_chunk = first_mapped_chunk->prev_chunk;
-                first_mapped_chunk->prev_chunk->next_chunk = chunk;
-                chunk->next_chunk = first_mapped_chunk;
-                first_mapped_chunk->prev_chunk = chunk;
-
-                return &chunk->usable_size;
-        }
+        return &chunk->usable_size;
 }
 
 void* x_malloc(size_t bytes_requested)
@@ -148,7 +136,7 @@ void* search_free_chunk(size_t bytes_requested)
         Returning NULL makes easier to verify in the caller if a
         free chunk has been found or not.
 */
-        struct Chunk *chunk = first_allocated_chunk;
+        struct SbrkChunk *chunk = first_allocated_chunk;
         do {
                 if (chunk->size >= bytes_requested) {
                         return &chunk->usable_size;
