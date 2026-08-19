@@ -9,10 +9,10 @@
 
 // 24/32 bytes
 struct SbrkChunk {
-        size_t size;
         int free;
         struct SbrkChunk *next_chunk;
         struct SbrkChunk *prev_chunk;
+        size_t size;
         void *usable_size;
 };
 
