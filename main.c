@@ -1,5 +1,6 @@
-#include <unistd.h>
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/mman.h>
 
 #define TRUE 1
 #define FALSE 0
@@ -19,7 +20,9 @@ struct Chunk {
 };
 
 int is_first_allocation = TRUE;
+int is_first_mapping = TRUE;
 static struct Chunk *first_allocated_chunk;
+static struct Chunk *first_mapped_chunk;
 
 size_t round_up_bytes(size_t bytes_requested)
 {
@@ -51,11 +54,8 @@ size_t round_up_bytes(size_t bytes_requested)
         return bytes_requested + diff;
 }
 
-void* x_malloc(size_t bytes_requested)
+void* alloc_set_break(size_t bytes_requested)
 {
-        if (bytes_requested % ALIGNMENT_MULTIPLE != 0) {
-                bytes_requested = round_up_bytes(bytes_requested);
-        }
 
         if (is_first_allocation == TRUE) {
                 first_allocated_chunk = sbrk(sizeof(struct Chunk) + bytes_requested);
