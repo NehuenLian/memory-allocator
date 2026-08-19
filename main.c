@@ -48,10 +48,9 @@ size_t round_up_bytes(size_t bytes_requested)
                 return BYTES_MINIMUM_REQUIRED;
         }
 
-        int alignment = PAGESIZE_MULTIPLE;
         size_t result;
         for (int i = 1; result < bytes_requested; i++) {
-                result = alignment*i;
+                result = PAGESIZE_MULTIPLE*i;
         }
         size_t diff = result - bytes_requested;
 
