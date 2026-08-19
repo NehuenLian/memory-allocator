@@ -122,9 +122,8 @@ void x_free(void *data_ptr)
         if (data_ptr == NULL) {
                 return;
         }
-        char *ptr = data_ptr;
-        char *pptr = ptr - BACKOFF_3_POINTERS;
-        *pptr = TRUE;
+        char *chunk_free_attribute = data_ptr - BACKOFF_3_POINTERS;
+        *chunk_free_attribute = TRUE;
 }
 
 void* search_free_chunk(size_t bytes_requested)
