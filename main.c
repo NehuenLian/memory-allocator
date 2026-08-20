@@ -84,13 +84,19 @@ void* alloc_set_break(size_t bytes_requested)
         }
 }
 
+
+#define MMAP_OFFSET 0
+
 void* alloc_memory_map(size_t bytes_requested)
 {
-        struct MMAPCHunk *chunk = mmap(NULL, sizeof(struct MMAPCHunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+        struct MMAPCHunk *chunk = mmap(NULL, sizeof(struct MMAPCHunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, MMAP_OFFSET);
         chunk->size = bytes_requested;
 
         return &chunk->usable_size;
 }
+
+
+#define MMAP_THRESHOLD 1024
 
 void* x_malloc(size_t bytes_requested)
 {
@@ -98,7 +104,7 @@ void* x_malloc(size_t bytes_requested)
                 bytes_requested = round_up_bytes(bytes_requested);
         }
 
-        if (bytes_requested < 1024) {
+        if (bytes_requested < MMAP_THRESHOLD) {
                 void *chunk_usable_size = alloc_set_break(bytes_requested);
                 return chunk_usable_size;
         } else {
