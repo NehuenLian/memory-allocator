@@ -8,22 +8,22 @@
 #define PAGESIZE_MULTIPLE 16
 
 // 24/32 bytes
-struct SbrkChunk {
+struct sbrk_chunk {
         int free;
-        struct SbrkChunk *next_chunk;
-        struct SbrkChunk *prev_chunk;
+        struct sbrk_chunk *next_chunk;
+        struct sbrk_chunk *prev_chunk;
         size_t size;
         void *usable_size;
 };
 
 // 8/16 bytes
-struct MMAPCHunk {
+struct mmap_chunk {
         size_t size;
         void *usable_size;
 };
 
 int is_first_allocation = TRUE;
-static struct SbrkChunk *first_allocated_chunk;
+static struct sbrk_chunk *first_allocated_chunk;
 
 
 #define BYTES_MINIMUM_REQUIRED 16
@@ -61,7 +61,7 @@ void* alloc_set_break(size_t bytes_requested)
 {
 
         if (is_first_allocation == TRUE) {
-                first_allocated_chunk = sbrk(sizeof(struct SbrkChunk) + bytes_requested);
+                first_allocated_chunk = sbrk(sizeof(struct sbrk_chunk) + bytes_requested);
                 first_allocated_chunk->size = bytes_requested;
                 first_allocated_chunk->free = FALSE;
                 first_allocated_chunk->next_chunk = first_allocated_chunk;
@@ -71,7 +71,7 @@ void* alloc_set_break(size_t bytes_requested)
 
                 return &first_allocated_chunk->usable_size;
         } else {
-                struct SbrkChunk *chunk = sbrk(sizeof(struct SbrkChunk) + bytes_requested);
+                struct sbrk_chunk *chunk = sbrk(sizeof(struct sbrk_chunk) + bytes_requested);
                 chunk->size = bytes_requested;
                 chunk->free = FALSE;
 
@@ -89,7 +89,7 @@ void* alloc_set_break(size_t bytes_requested)
 
 void* alloc_memory_map(size_t bytes_requested)
 {
-        struct MMAPCHunk *chunk = mmap(NULL, sizeof(struct MMAPCHunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, MMAP_OFFSET);
+        struct mmap_chunk *chunk = mmap(NULL, sizeof(struct mmap_chunk) + bytes_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, MMAP_OFFSET);
         chunk->size = bytes_requested;
 
         return &chunk->usable_size;
@@ -149,7 +149,7 @@ void* search_free_chunk(size_t bytes_requested)
         Returning NULL makes easier to verify in the caller if a
         free chunk has been found or not.
 */
-        struct SbrkChunk *chunk = first_allocated_chunk;
+        struct sbrk_chunk *chunk = first_allocated_chunk;
         do {
                 if (chunk->size >= bytes_requested) {
                         return &chunk->usable_size;
