@@ -108,7 +108,7 @@ void* x_malloc(size_t bytes_requested)
 }
 
 
-#define BACKOFF_3_POINTERS (sizeof(size_t)) * (3)
+#define BACKOFF_4_POINTERS (sizeof(size_t)) * (4)
 
 void x_free(void *data_ptr)
 {
@@ -122,8 +122,9 @@ void x_free(void *data_ptr)
         if (data_ptr == NULL) {
                 return;
         }
-        char *chunk_free_attribute = data_ptr - BACKOFF_3_POINTERS;
-        *chunk_free_attribute = TRUE;
+        char *ptr = data_ptr;
+        char *pptr = ptr - BACKOFF_4_POINTERS;
+        *pptr = TRUE;
 }
 
 void* search_free_chunk(size_t bytes_requested)
