@@ -115,6 +115,7 @@ void* x_malloc(size_t bytes_requested)
 
 
 #define BACKOFF_4_POINTERS (sizeof(size_t)) * (4)
+#define BACKOFF_1_POINTER (sizeof(size_t))
 
 void x_free(void *data_ptr)
 {
@@ -128,9 +129,14 @@ void x_free(void *data_ptr)
         if (data_ptr == NULL) {
                 return;
         }
-        char *ptr = data_ptr;
-        char *pptr = ptr - BACKOFF_4_POINTERS;
-        *pptr = TRUE;
+        char *chunk_size = data_ptr - BACKOFF_1_POINTER;
+
+        if (*(int*)chunk_size < MMAP_THRESHOLD) {
+                char *pptr = (char*)data_ptr - BACKOFF_4_POINTERS;
+                *(int*)pptr = TRUE;
+        } else {
+                munmap(data_ptr, *chunk_size);
+        }
 }
 
 void* search_free_chunk(size_t bytes_requested)
@@ -158,6 +164,9 @@ int main()
 {
         char *buffer = x_malloc(sizeof(char) * 16);
         x_free(buffer);
+
+        char *buffer2 = x_malloc(2048);
+        x_free(buffer2);
 
         return 0;
 }
